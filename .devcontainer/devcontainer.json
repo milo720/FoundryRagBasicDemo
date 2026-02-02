@@ -1,0 +1,26 @@
+{
+    "name": "Foundry RAG Chatbot Lab",
+    "image": "mcr.microsoft.com/devcontainers/python:3.11",
+    "features": {},
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-toolsai.jupyter"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python"
+            }
+        }
+    },
+    "postCreateCommand": "pip install -r requirements.txt && cp .env.example .env",
+    "forwardPorts": [5000],
+    "portsAttributes": {
+        "5000": {
+            "label": "Chatbot Web App",
+            "onAutoForward": "openPreview"
+        }
+    },
+    "remoteUser": "vscode"
+}
