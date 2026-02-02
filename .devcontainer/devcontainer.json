@@ -1,7 +1,9 @@
 {
     "name": "Foundry RAG Chatbot Lab",
     "image": "mcr.microsoft.com/devcontainers/python:3.11",
-    "features": {},
+    "features": {
+        "ghcr.io/devcontainers/features/azure-cli:1": {}
+    },
     "customizations": {
         "vscode": {
             "extensions": [

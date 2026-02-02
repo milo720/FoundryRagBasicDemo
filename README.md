@@ -19,9 +19,13 @@ A web-based chatbot that:
 1. Click the **"Code"** button on GitHub
 2. Select **"Open with Codespaces"**
 3. Wait for the environment to build
-4. Copy `.env.example` to `.env` and fill in your credentials
-5. Run `python app.py`
-6. Open the forwarded port in your browser
+4. Login to Azure:
+   ```bash
+   az login --use-device-code
+   ```
+5. Edit `.env` with your Azure endpoint and deployment name
+6. Run `python app.py`
+7. Open the forwarded port in your browser
 
 ### Option 2: Local Development
 
@@ -47,21 +51,37 @@ A web-based chatbot that:
    pip install -r requirements.txt
    ```
 
-4. Configure your environment:
+4. Install and login to Azure CLI:
+   ```bash
+   # Install Azure CLI: https://docs.microsoft.com/cli/azure/install-azure-cli
+   az login
+   ```
+
+5. Configure your environment:
    ```bash
    cp .env.example .env
    ```
 
-5. Edit `.env` with your Azure credentials (see Configuration section below)
+6. Edit `.env` with your Azure endpoint and deployment name (see Configuration section below)
 
-6. Run the application:
+7. Run the application:
    ```bash
    python app.py
    ```
 
-7. Open http://localhost:5000 in your browser
+8. Open http://localhost:5000 in your browser
 
 ## ⚙️ Configuration
+
+### Authentication
+
+This app uses **Azure Identity** for authentication. You must be logged in via Azure CLI:
+
+```bash
+az login --use-device-code
+```
+
+Make sure your Azure account has the **"Cognitive Services OpenAI User"** role on the Azure OpenAI resource.
 
 ### Required Settings
 
@@ -70,7 +90,6 @@ Edit your `.env` file with these values:
 | Variable | Description | Where to Find |
 |----------|-------------|---------------|
 | `AZURE_AI_ENDPOINT` | Your Azure OpenAI endpoint URL | Azure Portal → Azure OpenAI → Keys and Endpoint |
-| `AZURE_AI_API_KEY` | Your Azure OpenAI API key | Azure Portal → Azure OpenAI → Keys and Endpoint |
 | `AZURE_AI_DEPLOYMENT` | Name of your deployed model | Azure AI Studio → Deployments |
 
 ### Optional: RAG with Azure AI Search
@@ -141,9 +160,14 @@ FoundryRagBasicDemo/
 
 ## ❓ Troubleshooting
 
-### "Missing AZURE_AI_ENDPOINT or AZURE_AI_API_KEY"
+### "Missing AZURE_AI_ENDPOINT"
 - Make sure you copied `.env.example` to `.env`
-- Verify your credentials are correct in the `.env` file
+- Verify your endpoint is correct in the `.env` file
+
+### "DefaultAzureCredential failed" or authentication errors
+- Make sure you ran `az login --use-device-code`
+- Verify your Azure account has the **"Cognitive Services OpenAI User"** role on the resource
+- Try `az account show` to confirm you're logged in to the correct subscription
 
 ### "Model not found"
 - Check that `AZURE_AI_DEPLOYMENT` matches your deployment name exactly

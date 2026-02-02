@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request, jsonify, Response
 from dotenv import load_dotenv
 from openai import AzureOpenAI
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 import json
 
 # Load environment variables
@@ -13,18 +14,23 @@ app = Flask(__name__)
 client = None
 
 def get_client():
-    """Get or create Azure OpenAI client."""
+    """Get or create Azure OpenAI client using Azure Identity (az login)."""
     global client
     if client is None:
         endpoint = os.getenv("AZURE_AI_ENDPOINT")
-        api_key = os.getenv("AZURE_AI_API_KEY")
         
-        if not endpoint or not api_key:
-            raise ValueError("Missing AZURE_AI_ENDPOINT or AZURE_AI_API_KEY in environment variables")
+        if not endpoint:
+            raise ValueError("Missing AZURE_AI_ENDPOINT in environment variables")
+        
+        # Use DefaultAzureCredential - requires 'az login' first
+        credential = DefaultAzureCredential()
+        token_provider = get_bearer_token_provider(
+            credential, "https://cognitiveservices.azure.com/.default"
+        )
         
         client = AzureOpenAI(
             azure_endpoint=endpoint,
-            api_key=api_key,
+            azure_ad_token_provider=token_provider,
             api_version="2024-02-15-preview"
         )
     return client
