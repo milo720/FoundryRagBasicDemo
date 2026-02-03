@@ -1,189 +1,370 @@
-# 🤖 Azure AI Foundry RAG Chatbot Lab
+# 🤖 Azure AI Foundry RAG Chatbot Tutorial
 
-A simple, hands-on lab for building a RAG (Retrieval-Augmented Generation) chatbot using Azure AI Foundry.
+A hands-on tutorial for building a RAG (Retrieval-Augmented Generation) chatbot using Azure AI Foundry. You'll start with a basic UI and progressively add AI capabilities.
 
-![Chatbot Screenshot](docs/screenshot.png)
+## 🎯 What You'll Learn
 
-## 🎯 What You'll Build
+By the end of this tutorial, you will have:
+- ✅ A working chat UI connected to Azure OpenAI
+- ✅ RAG capabilities using Azure AI Search
+- ✅ Understanding of how these components work together
 
-A web-based chatbot that:
-- Connects to Azure AI Foundry (Azure OpenAI)
-- Optionally uses Azure AI Search for RAG capabilities
-- Runs locally in your browser
-- Maintains conversation history
+## 📋 Prerequisites
 
-## 🚀 Quick Start
+- A GitHub account
+- An Azure subscription with access to Azure OpenAI
+- Basic familiarity with Python
 
-### Option 1: GitHub Codespaces (Recommended)
+---
 
-1. Click the **"Code"** button on GitHub
-2. Select **"Open with Codespaces"**
-3. Wait for the environment to build
-4. Login to Azure:
-   ```bash
-   az login --use-device-code
-   ```
-5. Edit `.env` with your Azure endpoint and deployment name
-6. Run `python app.py`
-7. Open the forwarded port in your browser
+## Step 1: Launch the Codespace and Explore
 
-### Option 2: Local Development
+### 1.1 Start the Codespace
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/your-org/FoundryRagBasicDemo.git
-   cd FoundryRagBasicDemo
-   ```
+1. Click the **"Code"** button on this GitHub repository
+2. Select **"Open with Codespaces"** → **"Create codespace on main"**
+3. Wait for the environment to build (this takes a few minutes)
 
-2. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   
-   # Windows
-   venv\Scripts\activate
-   
-   # macOS/Linux
-   source venv/bin/activate
-   ```
+### 1.2 Explore the Project Structure
 
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+Once the Codespace is ready, take a look at the files:
 
-4. Install and login to Azure CLI:
-   ```bash
-   # Install Azure CLI: https://docs.microsoft.com/cli/azure/install-azure-cli
-   az login
-   ```
+```
+FoundryRagBasicDemo/
+├── app.py                   # Flask backend (you'll modify this!)
+├── templates/
+│   └── index.html           # Chat UI (already complete)
+├── .env.example             # Environment template
+├── requirements.txt         # Python dependencies
+└── README.md                # This tutorial
+```
 
-5. Configure your environment:
-   ```bash
-   cp .env.example .env
-   ```
+### 1.3 Run the App
 
-6. Edit `.env` with your Azure endpoint and deployment name (see Configuration section below)
-
-7. Run the application:
+1. Open the terminal in VS Code
+2. Run the app:
    ```bash
    python app.py
    ```
+3. When the popup appears, click **"Open in Browser"** (or go to the Ports tab and click the globe icon)
 
-8. Open http://localhost:5000 in your browser
+### 1.4 Test the UI
 
-## ⚙️ Configuration
+You'll see a chat interface. Try sending a message - you'll get:
 
-### Authentication
+> 💡 Chat not configured yet! Complete Step 2 in the README to connect to Azure OpenAI.
 
-This app uses **Azure Identity** for authentication. You must be logged in via Azure CLI:
+This is expected! The UI works, but we haven't connected it to an AI model yet.
 
+---
+
+## Step 2: Connect to Azure OpenAI
+
+Now let's make the chatbot actually chat!
+
+### 2.1 Get Your Azure OpenAI Details
+
+You'll need these from the Azure Portal:
+
+| Item | Where to Find |
+|------|---------------|
+| **Endpoint URL** | Azure Portal → Your OpenAI resource → Keys and Endpoint |
+| **Deployment Name** | Azure AI Foundry → Deployments (e.g., `gpt-4`, `gpt-4o`) |
+
+### 2.2 Login to Azure
+
+In the terminal, run:
 ```bash
 az login --use-device-code
 ```
 
-Make sure your Azure account has the **"Cognitive Services OpenAI User"** role on the Azure OpenAI resource.
+Follow the instructions to authenticate with your Azure account.
 
-### Required Settings
+### 2.3 Update the .env File
 
-Edit your `.env` file with these values:
-
-| Variable | Description | Where to Find |
-|----------|-------------|---------------|
-| `AZURE_AI_ENDPOINT` | Your Azure OpenAI endpoint URL | Azure Portal → Azure OpenAI → Keys and Endpoint |
-| `AZURE_AI_DEPLOYMENT` | Name of your deployed model | Azure AI Studio → Deployments |
-
-### Optional: RAG with Azure AI Search
-
-For RAG capabilities, also configure:
-
-| Variable | Description | Where to Find |
-|----------|-------------|---------------|
-| `AZURE_SEARCH_ENDPOINT` | Your Azure AI Search endpoint | Azure Portal → Azure AI Search → Overview |
-| `AZURE_SEARCH_KEY` | Your Azure AI Search admin key | Azure Portal → Azure AI Search → Keys |
-| `AZURE_SEARCH_INDEX` | Name of your search index | Azure Portal → Azure AI Search → Indexes |
-
-## 📁 Project Structure
-
-```
-FoundryRagBasicDemo/
-├── .devcontainer/
-│   └── devcontainer.json    # Codespaces configuration
-├── templates/
-│   └── index.html           # Chat web interface
-├── .env.example             # Environment template
-├── .gitignore
-├── app.py                   # Main Flask application
-├── requirements.txt         # Python dependencies
-└── README.md               # This file
+Open `.env` and add your values:
+```bash
+AZURE_AI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_AI_DEPLOYMENT=gpt-4
 ```
 
-## 🔧 How It Works
+### 2.4 Update app.py - Add Imports
 
-1. **Frontend** (`templates/index.html`): A simple HTML/CSS/JavaScript chat interface
-2. **Backend** (`app.py`): Flask server that handles API requests
-3. **Azure AI**: Processes messages using Azure OpenAI
-4. **Azure AI Search** (optional): Provides RAG capabilities by searching your knowledge base
+Open `app.py` and find the TODO comment near the top. **Uncomment** these imports:
 
-### Architecture
-
-```
-┌─────────────┐     ┌─────────────┐     ┌────────────────────┐
-│   Browser   │────▶│ Flask App   │────▶│ Azure OpenAI       │
-│  (Chat UI)  │◀────│ (Python)    │◀────│ (Chat Completion)  │
-└─────────────┘     └─────────────┘     └────────────────────┘
-                           │                      ▲
-                           │                      │
-                           ▼                      │
-                    ┌─────────────┐               │
-                    │ Azure AI    │───────────────┘
-                    │ Search      │  (RAG - retrieves context)
-                    └─────────────┘
+```python
+from openai import AzureOpenAI
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 ```
 
-## 🧪 Lab Exercises
+### 2.5 Update app.py - Add the Chat Logic
 
-### Exercise 1: Basic Chat
-1. Configure your `.env` with Azure OpenAI credentials
-2. Start the server and chat with the AI
-3. Try different types of questions
+Find the `chat()` function with the placeholder response. **Replace** the entire function with:
 
-### Exercise 2: Enable RAG
-1. Create an Azure AI Search resource
-2. Upload documents and create an index
-3. Configure the RAG settings in `.env`
-4. Notice the "Using knowledge base" badge in responses
+```python
+@app.route("/api/chat", methods=["POST"])
+def chat():
+    """Handle chat requests."""
+    try:
+        data = request.json
+        user_message = data.get("message", "")
+        conversation_history = data.get("history", [])
+        
+        if not user_message:
+            return jsonify({"error": "No message provided"}), 400
+        
+        # Get Azure OpenAI client
+        endpoint = os.getenv("AZURE_AI_ENDPOINT")
+        if not endpoint:
+            return jsonify({"error": "Azure AI endpoint not configured"}), 500
+        
+        credential = DefaultAzureCredential()
+        token_provider = get_bearer_token_provider(
+            credential, "https://cognitiveservices.azure.com/.default"
+        )
+        
+        client = AzureOpenAI(
+            azure_endpoint=endpoint,
+            azure_ad_token_provider=token_provider,
+            api_version="2024-02-15-preview"
+        )
+        
+        deployment = os.getenv("AZURE_AI_DEPLOYMENT", "gpt-4")
+        
+        # Build messages array
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful AI assistant. Answer questions clearly and concisely."
+            }
+        ]
+        
+        # Add conversation history
+        for msg in conversation_history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+        
+        # Add current user message
+        messages.append({"role": "user", "content": user_message})
+        
+        # Call Azure OpenAI
+        response = client.chat.completions.create(
+            model=deployment,
+            messages=messages,
+            max_tokens=1000,
+            temperature=0.7
+        )
+        
+        assistant_message = response.choices[0].message.content
+        
+        return jsonify({
+            "message": assistant_message,
+            "citations": [],
+            "rag_enabled": False
+        })
+        
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+```
 
-### Exercise 3: Customize the Bot
-1. Modify the system prompt in `app.py`
-2. Change the UI styling in `templates/index.html`
-3. Add new features like conversation export
+### 2.6 Test Your Chat
+
+1. Restart the app (press `Ctrl+C` and run `python app.py` again)
+2. Refresh your browser
+3. Try chatting - you should now get real AI responses! 🎉
+
+---
+
+## Step 3: Add RAG with Azure AI Search
+
+Now let's add the ability to chat with your own documents!
+
+### 3.1 Create an Azure Storage Account
+
+1. Go to the **Azure Portal**
+2. Create a new **Storage Account**
+3. Once created, go to **Containers** and create a container (e.g., `documents`)
+4. Upload some PDF, Word, or text files to the container
+
+### 3.2 Create an Azure AI Search Index
+
+1. Go to the **Azure Portal** and create an **Azure AI Search** service
+2. Once created, click **"Import and vectorize data"**
+3. Select **Azure Blob Storage** as your data source
+4. Connect to your storage account and select your container
+5. Choose your **Azure OpenAI** resource for embeddings
+6. Select an embeddings model (e.g., `text-embedding-ada-002`)
+7. Complete the wizard and wait for indexing to finish
+8. Note the **index name** that was created
+
+### 3.3 Get Your Search Key
+
+1. In your **Azure AI Search** service, go to **Settings** → **Keys**
+2. Copy the **Primary admin key**
+
+### 3.4 Update .env with Search Settings
+
+Add these lines to your `.env` file:
+```bash
+AZURE_SEARCH_ENDPOINT=https://your-search-service.search.windows.net
+AZURE_SEARCH_KEY=your-admin-key-here
+AZURE_SEARCH_INDEX=your-index-name
+```
+
+### 3.5 Update app.py - Add RAG Support
+
+**Replace** the `chat()` function with this enhanced version that includes RAG:
+
+```python
+@app.route("/api/chat", methods=["POST"])
+def chat():
+    """Handle chat requests with optional RAG."""
+    try:
+        data = request.json
+        user_message = data.get("message", "")
+        conversation_history = data.get("history", [])
+        
+        if not user_message:
+            return jsonify({"error": "No message provided"}), 400
+        
+        # Get Azure OpenAI client
+        endpoint = os.getenv("AZURE_AI_ENDPOINT")
+        if not endpoint:
+            return jsonify({"error": "Azure AI endpoint not configured"}), 500
+        
+        credential = DefaultAzureCredential()
+        token_provider = get_bearer_token_provider(
+            credential, "https://cognitiveservices.azure.com/.default"
+        )
+        
+        client = AzureOpenAI(
+            azure_endpoint=endpoint,
+            azure_ad_token_provider=token_provider,
+            api_version="2024-02-15-preview"
+        )
+        
+        deployment = os.getenv("AZURE_AI_DEPLOYMENT", "gpt-4")
+        
+        # Build messages array
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful AI assistant. Answer questions clearly and concisely. If you're using information from a knowledge base, mention that in your response."
+            }
+        ]
+        
+        for msg in conversation_history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+        
+        messages.append({"role": "user", "content": user_message})
+        
+        # Check if RAG is configured
+        search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
+        search_key = os.getenv("AZURE_SEARCH_KEY")
+        search_index = os.getenv("AZURE_SEARCH_INDEX")
+        
+        extra_body = None
+        rag_enabled = False
+        
+        if search_endpoint and search_key and search_index:
+            rag_enabled = True
+            extra_body = {
+                "data_sources": [
+                    {
+                        "type": "azure_search",
+                        "parameters": {
+                            "endpoint": search_endpoint,
+                            "index_name": search_index,
+                            "authentication": {
+                                "type": "api_key",
+                                "key": search_key
+                            },
+                            "query_type": "simple",
+                            "top_n_documents": 5
+                        }
+                    }
+                ]
+            }
+        
+        # Call Azure OpenAI
+        if extra_body:
+            response = client.chat.completions.create(
+                model=deployment,
+                messages=messages,
+                extra_body=extra_body,
+                max_tokens=1000,
+                temperature=0.7
+            )
+        else:
+            response = client.chat.completions.create(
+                model=deployment,
+                messages=messages,
+                max_tokens=1000,
+                temperature=0.7
+            )
+        
+        assistant_message = response.choices[0].message.content
+        
+        # Extract citations if available
+        citations = []
+        if hasattr(response.choices[0].message, 'context') and response.choices[0].message.context:
+            context = response.choices[0].message.context
+            if 'citations' in context:
+                citations = context['citations']
+        
+        return jsonify({
+            "message": assistant_message,
+            "citations": citations,
+            "rag_enabled": rag_enabled
+        })
+        
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+```
+
+### 3.6 Test RAG
+
+1. Restart the app
+2. Ask questions about the content in your uploaded documents
+3. You should see a **"📚 Using knowledge base"** badge on responses!
+
+---
+
+## 🎉 Congratulations!
+
+You've built a RAG chatbot! Here's what you accomplished:
+
+1. ✅ Set up a development environment with Codespaces
+2. ✅ Connected a web UI to Azure OpenAI
+3. ✅ Added RAG capabilities with Azure AI Search
+
+## 🚀 Next Steps
+
+Try these enhancements:
+
+- **Customize the system prompt** to give your bot a personality
+- **Modify the UI** in `templates/index.html`
+- **Try different models** by changing the deployment
+- **Experiment with search settings** like `query_type: "semantic"`
 
 ## ❓ Troubleshooting
 
-### "Missing AZURE_AI_ENDPOINT"
-- Make sure you copied `.env.example` to `.env`
-- Verify your endpoint is correct in the `.env` file
+### "Chat not configured" message persists
+- Make sure you uncommented the imports in `app.py`
+- Verify `.env` has the correct `AZURE_AI_ENDPOINT` value
 
-### "DefaultAzureCredential failed" or authentication errors
-- Make sure you ran `az login --use-device-code`
-- Verify your Azure account has the **"Cognitive Services OpenAI User"** role on the resource
-- Try `az account show` to confirm you're logged in to the correct subscription
+### Authentication errors
+- Run `az login --use-device-code` again
+- Ensure you have the **"Cognitive Services OpenAI User"** role on the Azure OpenAI resource
 
 ### "Model not found"
 - Check that `AZURE_AI_DEPLOYMENT` matches your deployment name exactly
-- Ensure the model is deployed in Azure AI Studio
 
-### Connection errors
-- Verify your Azure OpenAI resource is active
-- Check if your IP is allowed in the Azure networking settings
+### RAG not working
+- Verify all three search variables are set in `.env`
+- Make sure your search index has documents in it
 
 ## 📚 Resources
 
 - [Azure OpenAI Documentation](https://learn.microsoft.com/azure/ai-services/openai/)
 - [Azure AI Search Documentation](https://learn.microsoft.com/azure/search/)
 - [Flask Documentation](https://flask.palletsprojects.com/)
-- [OpenAI Python SDK](https://github.com/openai/openai-python)
-
-## 📄 License
-
-MIT License - Feel free to use this for learning and building!
