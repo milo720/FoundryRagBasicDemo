@@ -22,7 +22,7 @@ By the end of this tutorial, you will have:
 ### 1.1 Start the Codespace
 
 1. Click the **"Code"** button on this GitHub repository
-2. Select **"Open with Codespaces"** → **"Create codespace on main"**
+2. Select **"CodeSpace"** → **"Create codespace on main"**
 3. Wait for the environment to build (this takes a few minutes)
 
 ### 1.2 Explore the Project Structure
@@ -68,8 +68,10 @@ You'll need these from the Azure Portal:
 
 | Item | Where to Find |
 |------|---------------|
-| **Endpoint URL** | Azure Portal → Your OpenAI resource → Keys and Endpoint |
-| **Deployment Name** | Azure AI Foundry → Deployments (e.g., `gpt-4`, `gpt-4o`) |
+| **Endpoint URL** | In foundry -> Overview -> Endpoint and Keys -> Azure Open AI -> Azure OpenAI Endpoint |
+| **Deployment Name** | Azure AI Foundry → Models + Endpoints -> Find the name of your model (e.g., `gpt-4`, `gpt-4o`) |
+
+If you do not have a model deployment you can create one. Go to Models + Endpoints -> Deploy Model -> Deploy Base Model -> Search And Choose Gpt-4.1 -> leave everything as default and click deploy.
 
 ### 2.2 Login to Azure
 
@@ -81,8 +83,9 @@ az login --use-device-code
 Follow the instructions to authenticate with your Azure account.
 
 ### 2.3 Update the .env File
+Creat a copy of the `.env.example` file, call it `.env`.
 
-Open `.env` and add your values:
+Open `.env` and add your values, for example:
 ```bash
 AZURE_AI_ENDPOINT=https://your-resource.openai.azure.com/
 AZURE_AI_DEPLOYMENT=gpt-4
@@ -177,31 +180,45 @@ def chat():
 ## Step 3: Add RAG with Azure AI Search
 
 Now let's add the ability to chat with your own documents!
+### 3.1 Deploy and Ebeddings Model
 
-### 3.1 Create an Azure Storage Account
+We are going to deploy and embedings model to enabel our vector search.
+Go to Foundry -> select your project -> go to Models + Endpoints -> Deploy model -> Deploy Base model -> Search `text-embedding-3-small` -> select it and click confirm -> Leave everything as default and click deploy.
+
+
+
+### 3.2 Upload Documents to Azure Storage
+
+A storage account has already been created for you.
 
 1. Go to the **Azure Portal**
-2. Create a new **Storage Account**
-3. Once created, go to **Containers** and create a container (e.g., `documents`)
-4. Upload some PDF, Word, or text files to the container
+2. Navigate to the existing **Storage Account**
+3. Go to **Containers**, click add continer, name it somthing unique to you.
+4. Click on the neq container
+5. Upload some PDF, Word, or text files to the container using the upload button. You will find an example pdf in this repository if needed.
 
-### 3.2 Create an Azure AI Search Index
+### 3.3 Create an Azure AI Search Index
 
-1. Go to the **Azure Portal** and create an **Azure AI Search** service
-2. Once created, click **"Import and vectorize data"**
+An Azure AI Search service has already been created for you.
+
+1. Go to the **Azure Portal** and navigate to the existing **Azure AI Search** service
+2. Click **"Import data (new)" on the top bar.** ![an image of the import data butto](./Images/importButton.png)
 3. Select **Azure Blob Storage** as your data source
-4. Connect to your storage account and select your container
-5. Choose your **Azure OpenAI** resource for embeddings
-6. Select an embeddings model (e.g., `text-embedding-ada-002`)
-7. Complete the wizard and wait for indexing to finish
-8. Note the **index name** that was created
+4. Select RAG
+5. Select your subscription, the storage account where you upload the example files and the contianer you uploaded your files to. You can leave Blob Folder, Parsing Mode, Enable deletion tracking and autneticate using managed identity as the default values.
+6. Click Next
+4. Select to use Azure Ai foundry (preview), select your subscription, select your azure Ai Foundry Project, Select your ebedding model. ![an image of selecting an emdeding model](./Images/VectorizeText.png)
+5. Select Next
+6. Leave `Vectorize your images` and `enrich your data with AI skills` unchecked and click next.
+7. Click create and wait for it to finish.
 
-### 3.3 Get Your Search Key
+
+### 3.4 Get Your Search Key
 
 1. In your **Azure AI Search** service, go to **Settings** → **Keys**
 2. Copy the **Primary admin key**
 
-### 3.4 Update .env with Search Settings
+### 3.5 Update .env with Search Settings
 
 Add these lines to your `.env` file:
 ```bash
@@ -210,7 +227,7 @@ AZURE_SEARCH_KEY=your-admin-key-here
 AZURE_SEARCH_INDEX=your-index-name
 ```
 
-### 3.5 Update app.py - Add RAG Support
+### 3.6 Update app.py - Add RAG Support
 
 **Replace** the `chat()` function with this enhanced version that includes RAG:
 
@@ -321,7 +338,7 @@ def chat():
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 ```
 
-### 3.6 Test RAG
+### 3.7 Test RAG
 
 1. Restart the app
 2. Ask questions about the content in your uploaded documents
@@ -329,22 +346,258 @@ def chat():
 
 ---
 
+## Step 4: Alternative RAG with Azure AI Foundry Agents
+
+Azure AI Foundry Agents offer another way to implement RAG. Instead of manually configuring Azure AI Search in your code, you can create an Agent in Azure AI Foundry that handles document retrieval automatically. This approach simplifies your code and centralizes the RAG configuration in the portal.
+
+### 4.1 Create an Agent in Azure AI Foundry
+
+1. Go to [Azure AI Foundry](https://ai.azure.com)
+2. Select your project (or create one if needed)
+3. Navigate to **Agents** in the left menu
+4. Click **+ New agent**
+5. Give your agent a name (e.g., `document-assistant`)
+6. Select a model (e.g., `gpt-4o`)
+7. Add instructions for your agent:
+   ```
+   You are a helpful assistant that answers questions based on the uploaded documents. 
+   Always cite the source document when providing information.
+   ```
+
+### 4.2 Upload Documents to the Agent
+
+1. In your agent's configuration, find the **Knowledge** section
+2. Click **+ Add files**
+3. Upload the same PDF, Word, or text files you used earlier
+4. Wait for the files to be processed (this may take a few minutes)
+5. The agent will automatically index the documents for retrieval
+
+### 4.3 Get Your Agent ID and Project Endpoint
+
+1. In your agent's page, look for the **Agent ID** (it looks like `asst_xxxxxxxxxxxx`)
+2. Copy this ID - you'll need it in your code
+3. Go to **Overview** (Top of the left bar)
+4. In the Endpoints and Keys get the Microsft Foundry Enpoint:
+   ```
+   https://<your-hub>.services.ai.azure.com/api/projects/<project-name>
+   ```
+
+
+> ⚠️ **Important:** The endpoint for Agents is the **Project endpoint**, not the Azure OpenAI resource endpoint. If you get a "No assistant found" error, this is likely the issue!
+
+### 4.4 Update .env with Agent Settings
+
+Add these lines to your `.env` file:
+
+```bash
+# Agent Configuration
+# Use the PROJECT endpoint from AI Foundry, not the OpenAI resource endpoint!
+AZURE_AI_ENDPOINT=https://your-hub.services.ai.azure.com/api/projects/your-project
+AZURE_AGENT_ID=asst_your-agent-id-here
+```
+
+> ⚠️ **No quotes around values!** The `.env` file should have no quotes or trailing spaces.
+
+
+### 4.6 Update app.py - Add Agent Support
+
+Replace the imports at the top of your `app.py`:
+
+```python
+import os
+from flask import Flask, render_template, request, jsonify
+from dotenv import load_dotenv
+from azure.ai.projects import AIProjectClient
+from azure.ai.agents.models import ListSortOrder
+from azure.identity import DefaultAzureCredential
+```
+
+Then replace the `chat()` function with this agent-based version:
+
+```python
+@app.route("/api/chat", methods=["POST"])
+def chat():
+    """Handle chat requests using Azure AI Foundry Agent."""
+    try:
+        data = request.json
+        user_message = data.get("message", "")
+        
+        if not user_message:
+            return jsonify({"error": "No message provided"}), 400
+        
+        # Get Azure AI Foundry settings
+        endpoint = os.getenv("AZURE_AI_ENDPOINT")
+        agent_id = os.getenv("AZURE_AGENT_ID")
+        
+        if not endpoint or not agent_id:
+            return jsonify({"error": "Agent not configured. Set AZURE_AI_ENDPOINT and AZURE_AGENT_ID"}), 500
+        
+        # Create the AI Project client
+        project = AIProjectClient(
+            credential=DefaultAzureCredential(),
+            endpoint=endpoint
+        )
+        
+        # Get the agent
+        agent = project.agents.get_agent(agent_id)
+        
+        # Create a new thread
+        thread = project.agents.threads.create()
+        
+        # Add the user message
+        project.agents.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=user_message
+        )
+        
+        # Run the agent and wait for completion
+        run = project.agents.runs.create_and_process(
+            thread_id=thread.id,
+            agent_id=agent.id
+        )
+        
+        if run.status == "failed":
+            return jsonify({"error": f"Agent run failed: {run.last_error}"}), 500
+        
+        # Get the response
+        messages = project.agents.messages.list(
+            thread_id=thread.id,
+            order=ListSortOrder.DESCENDING
+        )
+        
+        # Find the assistant's message
+        assistant_message = ""
+        citations = []
+        
+        for msg in messages:
+            if msg.role == "assistant" and msg.text_messages:
+                assistant_message = msg.text_messages[-1].text.value
+                break
+        
+        return jsonify({
+            "message": assistant_message,
+            "citations": citations,
+            "rag_enabled": True,
+            "thread_id": thread.id,
+            "agent_mode": True
+        })
+        
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+```
+
+### 4.7 Compare the Two RAG Approaches
+
+| Feature | Azure AI Search RAG (Step 3) | Foundry Agent RAG (Step 4) |
+|---------|------------------------------|----------------------------|
+| **Setup** | Configure search index, embeddings, and connection in code | Upload files directly in AI Foundry portal |
+| **SDK** | `openai` package | `azure-ai-projects` package |
+| **Flexibility** | Full control over search parameters | Agent handles retrieval automatically |
+| **Conversation** | Manual history management | Built-in thread management |
+| **Best For** | Custom search requirements, fine-tuned retrieval | Quick setup, simpler use cases |
+
+### 4.8 Test Agent-Based RAG
+
+1. Restart the app
+2. Chat with your agent - it will use the documents you uploaded in AI Foundry!
+3. The agent will automatically search through your uploaded documents!
+
+> 💡 **Tip:** You can switch between the two approaches based on your needs. Use Azure AI Search for more control, or Agents for simpler setup and built-in conversation management.
+
+---
+
 ## 🎉 Congratulations!
 
-You've built a RAG chatbot! Here's what you accomplished:
+You've built a RAG chatbot with two different approaches! Here's what you accomplished:
 
 1. ✅ Set up a development environment with Codespaces
 2. ✅ Connected a web UI to Azure OpenAI
 3. ✅ Added RAG capabilities with Azure AI Search
+4. ✅ Implemented alternative RAG using Azure AI Foundry Agents
+
+---
+
+## 🌟 Stretch Goals
+
+Finished early? Try these challenges! These are intentionally less detailed - you'll need to explore and experiment.
+
+### Stretch Goal 1: Add Image Generation to Chat
+
+**Goal:** When a user asks for an image (e.g., "draw me a cat"), the chat should generate and display it inline.
+
+**Hints:**
+- Deploy a `dall-e-3` model in Azure AI Foundry
+- Add `AZURE_DALLE_DEPLOYMENT` to your `.env`
+- Use function calling to detect when a user wants an image (define a `generate_image` tool)
+- Call `client.images.generate()` to create the image
+- Return the image URL in your response and update the frontend to render `<img>` tags
+- The response format: `response.data[0].url` contains the generated image URL
+
+**Key API:**
+```python
+response = client.images.generate(
+    model=dalle_deployment,
+    prompt=user_prompt,
+    n=1,
+    size="1024x1024"
+)
+image_url = response.data[0].url
+```
+
+**Frontend hint:** Check if the response contains an image URL and render it with `<img src="...">`.
+
+---
+
+### Stretch Goal 2: Call External APIs with Function Calling
+
+**Goal:** Add tools that let the AI call external APIs - and use a Request Bin to visualize what it sends!
+
+**Hints:**
+- Create a request bin at [https://rbin.passkit.com/](https://rbin.passkit.com/) - keep the inspect page open
+- Define tools in your chat endpoint using the `tools` parameter
+- When the model returns `tool_calls`, execute them by POSTing to your request bin
+- Return the result and let the model summarize it
+
+**Tool definition pattern:**
+```python
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "send_notification",
+        "description": "Send a notification to someone",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "recipient": {"type": "string"},
+                "message": {"type": "string"}
+            },
+            "required": ["recipient", "message"]
+        }
+    }
+}]
+```
+
+**Key concepts:**
+- Pass `tools=tools, tool_choice="auto"` to `chat.completions.create()`
+- Check `response.choices[0].message.tool_calls` for function requests
+- Execute the function, then call the API again with the result as a `tool` message
+- Watch your request bin to see exactly what the AI decides to send!
+
+**Try asking:** "Send a notification to Sarah about the project deadline"
+
+---
 
 ## 🚀 Next Steps
 
 Try these enhancements:
 
 - **Customize the system prompt** to give your bot a personality
-- **Modify the UI** in `templates/index.html`
+- **Modify the UI** in `templates/index.html` to toggle between RAG approaches
 - **Try different models** by changing the deployment
 - **Experiment with search settings** like `query_type: "semantic"`
+- **Add tools to your Agent** for more advanced capabilities
+- **Combine features** - Add function calling to your RAG agent!
 
 ## ❓ Troubleshooting
 

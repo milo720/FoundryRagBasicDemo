@@ -26,12 +26,6 @@ def chat():
     if not user_message:
         return jsonify({"error": "No message provided"}), 400
     
-    # ============================================================
-    # 🚧 STEP 2: Connect to Azure OpenAI
-    # 
-    # Replace the placeholder response below with Azure OpenAI code.
-    # See README.md for instructions.
-    # ============================================================
     
     return jsonify({
         "message": "💡 Chat not configured yet! Complete Step 2 in the README to connect to Azure OpenAI.",
