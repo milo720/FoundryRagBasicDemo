@@ -71,38 +71,30 @@ You'll need these from the Azure Portal:
 | Item | Where to Find |
 |------|---------------|
 | **Endpoint URL** | In foundry -> Overview -> Endpoint and Keys -> Azure Open AI -> Azure OpenAI Endpoint |
+| **API Key** | In foundry -> Overview -> Endpoint and Keys -> Azure Open AI -> Keys (Key 1 or Key 2) |
 | **Deployment Name** | Azure AI Foundry → Models + Endpoints -> Find the name of your model (e.g., `gpt-4`, `gpt-4o`) |
 
 If you do not have a model deployment you can create one. Go to Models + Endpoints -> Deploy Model -> Deploy Base Model -> Search And Choose Gpt-4.1 -> leave everything as default and click deploy.
 
-### 2.2 Login to Azure
-
-In the terminal, run:
-```bash
-az login --use-device-code
-```
-
-Follow the instructions to authenticate with your Azure account.
-
-### 2.3 Update the .env File
-Creat a copy of the `.env.example` file, call it `.env`.
+### 2.2 Update the .env File
+Create a copy of the `.env.example` file, call it `.env`.
 
 Open `.env` and add your values, for example:
 ```bash
 AZURE_AI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_AI_KEY=your-api-key-here
 AZURE_AI_DEPLOYMENT=gpt-4
 ```
 
-### 2.4 Update app.py - Add Imports
+### 2.3 Update app.py - Add Imports
 
-Open `app.py` and find the TODO comment near the top. **Uncomment** these imports:
+Open `app.py` and find the TODO comment near the top. **Uncomment** this import:
 
 ```python
 from openai import AzureOpenAI
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 ```
 
-### 2.5 Update app.py - Add the Chat Logic
+### 2.4 Update app.py - Add the Chat Logic
 
 Find the `chat()` function with the placeholder response. **Replace** the entire function with:
 
@@ -120,17 +112,13 @@ def chat():
         
         # Get Azure OpenAI client
         endpoint = os.getenv("AZURE_AI_ENDPOINT")
-        if not endpoint:
-            return jsonify({"error": "Azure AI endpoint not configured"}), 500
-        
-        credential = DefaultAzureCredential()
-        token_provider = get_bearer_token_provider(
-            credential, "https://cognitiveservices.azure.com/.default"
-        )
+        api_key = os.getenv("AZURE_AI_KEY")
+        if not endpoint or not api_key:
+            return jsonify({"error": "Azure AI endpoint or API key not configured"}), 500
         
         client = AzureOpenAI(
             azure_endpoint=endpoint,
-            azure_ad_token_provider=token_provider,
+            api_key=api_key,
             api_version="2024-02-15-preview"
         )
         
@@ -171,7 +159,7 @@ def chat():
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 ```
 
-### 2.6 Test Your Chat
+### 2.5 Test Your Chat
 
 1. Restart the app (press `Ctrl+C` and run `python app.py` again)
 2. Refresh your browser
@@ -247,17 +235,13 @@ def chat():
         
         # Get Azure OpenAI client
         endpoint = os.getenv("AZURE_AI_ENDPOINT")
-        if not endpoint:
-            return jsonify({"error": "Azure AI endpoint not configured"}), 500
-        
-        credential = DefaultAzureCredential()
-        token_provider = get_bearer_token_provider(
-            credential, "https://cognitiveservices.azure.com/.default"
-        )
+        api_key = os.getenv("AZURE_AI_KEY")
+        if not endpoint or not api_key:
+            return jsonify({"error": "Azure AI endpoint or API key not configured"}), 500
         
         client = AzureOpenAI(
             azure_endpoint=endpoint,
-            azure_ad_token_provider=token_provider,
+            api_key=api_key,
             api_version="2024-02-15-preview"
         )
         
@@ -395,13 +379,14 @@ Add these lines to your `.env` file:
 # Agent Configuration
 # Use the PROJECT endpoint from AI Foundry, not the OpenAI resource endpoint!
 AZURE_AI_ENDPOINT=https://your-hub.services.ai.azure.com/api/projects/your-project
+AZURE_AI_KEY=your-api-key-here
 AZURE_AGENT_ID=asst_your-agent-id-here
 ```
 
 > ⚠️ **No quotes around values!** The `.env` file should have no quotes or trailing spaces.
 
 
-### 4.6 Update app.py - Add Agent Support
+### 4.5 Update app.py - Add Agent Support
 
 Replace the imports at the top of your `app.py`:
 
@@ -411,7 +396,7 @@ from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 from azure.ai.projects import AIProjectClient
 from azure.ai.agents.models import ListSortOrder
-from azure.identity import DefaultAzureCredential
+from azure.core.credentials import AzureKeyCredential
 ```
 
 Then replace the `chat()` function with this agent-based version:
@@ -429,14 +414,15 @@ def chat():
         
         # Get Azure AI Foundry settings
         endpoint = os.getenv("AZURE_AI_ENDPOINT")
+        api_key = os.getenv("AZURE_AI_KEY")
         agent_id = os.getenv("AZURE_AGENT_ID")
         
-        if not endpoint or not agent_id:
-            return jsonify({"error": "Agent not configured. Set AZURE_AI_ENDPOINT and AZURE_AGENT_ID"}), 500
+        if not endpoint or not api_key or not agent_id:
+            return jsonify({"error": "Agent not configured. Set AZURE_AI_ENDPOINT, AZURE_AI_KEY, and AZURE_AGENT_ID"}), 500
         
         # Create the AI Project client
         project = AIProjectClient(
-            credential=DefaultAzureCredential(),
+            credential=AzureKeyCredential(api_key),
             endpoint=endpoint
         )
         
@@ -619,11 +605,11 @@ Try these enhancements:
 
 ### "Chat not configured" message persists
 - Make sure you uncommented the imports in `app.py`
-- Verify `.env` has the correct `AZURE_AI_ENDPOINT` value
+- Verify `.env` has the correct `AZURE_AI_ENDPOINT` and `AZURE_AI_KEY` values
 
 ### Authentication errors
-- Run `az login --use-device-code` again
-- Ensure you have the **"Cognitive Services OpenAI User"** role on the Azure OpenAI resource
+- Verify your `AZURE_AI_KEY` is correct and not expired
+- Make sure the API key has permissions to access the Azure OpenAI resource
 
 ### "Model not found"
 - Check that `AZURE_AI_DEPLOYMENT` matches your deployment name exactly

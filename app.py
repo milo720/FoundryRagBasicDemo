@@ -1,9 +1,8 @@
 import os
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
-# TODO Step 2: Uncomment these imports when connecting to Azure OpenAI
+# TODO Step 2: Uncomment this import when connecting to Azure OpenAI
 # from openai import AzureOpenAI
-# from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
 # Load environment variables
 load_dotenv()
