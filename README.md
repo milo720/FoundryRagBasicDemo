@@ -2,6 +2,8 @@
 
 A hands-on tutorial for building a RAG (Retrieval-Augmented Generation) chatbot using Azure AI Foundry. You'll start with a basic UI and progressively add AI capabilities.
 
+> ℹ️ **Note:** These instructions are written for the **old Azure AI Foundry portal**. The model-based approach (Steps 2-3) works the same in both old and new portals with some slight UI differentces. However agents are different between the portals and so a minor code change is needed there, see [Stretch Goal 1](#stretch-goal-1-use-a-new-foundry-agent).
+
 ## 🎯 What You'll Learn
 
 By the end of this tutorial, you will have:
@@ -522,7 +524,21 @@ You've built a RAG chatbot with two different approaches! Here's what you accomp
 
 Finished early? Try these challenges! These are intentionally less detailed - you'll need to explore and experiment.
 
-### Stretch Goal 1: Add Image Generation to Chat
+### Stretch Goal 1: Use a New Foundry Agent
+
+**Goal:** Replace the old agent implementation with a new Foundry agent for improved capabilities and performance.
+
+**Hints:**
+- Create a new agent in Azure AI Foundry under the Agents section
+- Configure the agent with your desired system prompt, model and knowledge.
+- Look Under the code section in the portal to get an sample on how to conenct to the agent.
+
+
+**Benefits:** New Foundry agents provide built-in conversation management, easier tool integration, and better observability through the Azure AI Foundry portal.
+
+---
+
+### Stretch Goal 2: Add Image Generation to Chat
 
 **Goal:** When a user asks for an image (e.g., "draw me a cat"), the chat should generate and display it inline.
 
@@ -549,7 +565,7 @@ image_url = response.data[0].url
 
 ---
 
-### Stretch Goal 2: Call External APIs with Function Calling
+### Stretch Goal 3: Call External APIs with Function Calling
 
 **Goal:** Add tools that let the AI call external APIs - and use a Request Bin to visualize what it sends!
 
